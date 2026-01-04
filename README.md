@@ -1,80 +1,90 @@
-# Conversation Web App Template
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 智能岗位分析与规划助手
 
-## Config App
-Create a file named `.env.local` in the current directory and copy the contents from `.env.example`. Setting the following content:
-```
-# APP ID: This is the unique identifier for your app. You can find it in the app's detail page URL. 
-# For example, in the URL `https://cloud.dify.ai/app/xxx/workflow`, the value `xxx` is your APP ID.
-NEXT_PUBLIC_APP_ID=
+基于 [Dify](https://dify.ai) 工作流搭建的智能对话助手，帮助用户分析 AI 产品实习岗位 JD 并给出准备建议，或解答 AI 产品相关知识问题。
 
-# APP API Key: This is the key used to authenticate your app's API requests. 
-# You can generate it on the app's "API Access" page by clicking the "API Key" button in the top-right corner.
-NEXT_PUBLIC_APP_KEY=
+## ✨ 功能特性
 
-# APP URL: This is the API's base URL. If you're using the Dify cloud service, set it to: https://api.dify.ai/v1.
-NEXT_PUBLIC_API_URL=
-```
+- 🎯 **岗位 JD 分析** - 解析招聘信息中的关键要求和技能点
+- 📝 **准备建议** - 针对目标岗位提供个性化的学习和面试准备建议
+- 💡 **知识问答** - 解答 AI 产品领域的相关问题
+- 🔄 **对话管理** - 支持多轮对话、会话历史管理
+- ⏹️ **停止响应** - 支持中断 AI 回复
+- 👍 **反馈系统** - 对回答进行点赞/点踩和反馈
 
-Config more in `config/index.ts` file:   
-```js
-export const APP_INFO: AppInfo = {
-  title: 'Chat APP',
-  description: '',
-  copyright: '',
-  privacy_policy: '',
-  default_language: 'zh-Hans'
-}
+## 🛠️ 技术栈
 
-export const isShowPrompt = true
-export const promptTemplate = ''
-```
+- **前端框架**: Next.js 15 + React 19
+- **样式**: Tailwind CSS
+- **国际化**: i18next
+- **AI 后端**: Dify 工作流
+- **部署**: Vercel
 
-## Getting Started
-First, install dependencies:
+## 🚀 快速开始
+
+### 环境配置
+
+1. 复制环境变量文件：
 ```bash
+cp .env.example .env.local
+```
+
+2. 配置 `.env.local`：
+```env
+# Dify 应用 ID（在 Dify 应用详情页 URL 中获取）
+NEXT_PUBLIC_APP_ID=your_app_id
+
+# Dify API 密钥（在应用的 API 访问页面生成）
+NEXT_PUBLIC_APP_KEY=your_api_key
+
+# Dify API 地址（云服务使用 https://api.dify.ai/v1）
+NEXT_PUBLIC_API_URL=https://api.dify.ai/v1
+```
+
+### 本地开发
+
+```bash
+# 安装依赖
 npm install
-# or
-yarn
-# or
-pnpm install
+
+# 启动开发服务器
+npm run dev
 ```
 
-Then, run the development server:
+访问 [http://localhost:3000](http://localhost:3000) 查看效果。
+
+### Docker 部署
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+# 构建镜像
+docker build . -t job-analysis-assistant:latest
 
-## Using Docker
-
-```
-docker build . -t <DOCKER_HUB_REPO>/webapp-conversation:latest
-# now you can access it in port 3000
-docker run -p 3000:3000 <DOCKER_HUB_REPO>/webapp-conversation:latest
+# 运行容器
+docker run -p 3000:3000 job-analysis-assistant:latest
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Vercel 部署
 
-## Learn More
+1. Fork 本仓库到你的 GitHub
+2. 在 [Vercel](https://vercel.com) 导入项目
+3. 配置环境变量（`NEXT_PUBLIC_APP_ID`、`NEXT_PUBLIC_APP_KEY`、`NEXT_PUBLIC_API_URL`）
+4. 部署完成
 
-To learn more about Next.js, take a look at the following resources:
+> ⚠️ Vercel Hobby 套餐有响应时长限制，长回复可能被截断。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📁 项目结构
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+```
+├── app/
+│   ├── api/          # API 路由（代理 Dify 接口）
+│   └── components/   # React 组件
+├── config/           # 应用配置
+├── hooks/            # 自定义 Hooks
+├── i18n/             # 国际化
+├── service/          # API 服务层
+├── types/            # TypeScript 类型定义
+└── utils/            # 工具函数
+```
 
-## Deploy on Vercel
+## 📄 开源协议
 
-> ⚠️ If you are using [Vercel Hobby](https://vercel.com/pricing), your message will be truncated due to the limitation of vercel.
-
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+本项目基于 [Dify WebApp 模板](https://github.com/langgenius/webapp-conversation) 二次开发，遵循 MIT 协议。

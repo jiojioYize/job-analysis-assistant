@@ -11,7 +11,7 @@ import Toast from '@/app/components/base/toast'
 import Select from '@/app/components/base/select'
 import { DEFAULT_VALUE_MAX_LEN } from '@/config'
 
-// regex to match the {{}} and replace it with a span
+// 正则表达式用于匹配 {{}} 并替换为 span
 const regex = /\{\{([^}]+)\}\}/g
 
 export interface IWelcomeProps {
@@ -213,7 +213,7 @@ const Welcome: FC<IWelcomeProps> = ({
         </div>
       )
     }
-    // private version
+    // 私有版本
     return (
       <TemplateVarPanel
         isFold={false}

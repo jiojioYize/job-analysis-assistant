@@ -8,7 +8,7 @@ interface TooltipProps {
   selector: string
   content?: string
   htmlContent?: React.ReactNode
-  className?: string // This should use !impornant to override the default styles eg: '!bg-white'
+  className?: string // 需要使用 !important 覆盖默认样式，例如: '!bg-white'
   position?: 'top' | 'right' | 'bottom' | 'left'
   clickable?: boolean
   children: React.ReactNode

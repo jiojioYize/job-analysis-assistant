@@ -4,7 +4,7 @@ export const API_KEY = `${process.env.NEXT_PUBLIC_APP_KEY}`
 export const API_URL = `${process.env.NEXT_PUBLIC_API_URL}`
 export const APP_INFO: AppInfo = {
   title: '智能岗位分析与规划助手',
-  description: '基于用户输入、知识库和LLM构建的工作流。可以帮助用户分析AI产品实习岗位JD并给出准备建议，或者解答AI产品相关知识的问题',
+  description: '基于Dify工作流的智能对话助手。可以帮助用户分析AI产品实习岗位JD并给出准备建议，或者解答AI产品相关知识的问题',
   copyright: '',
   privacy_policy: '',
   default_language: 'zh-Hans',

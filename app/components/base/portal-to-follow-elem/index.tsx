@@ -94,8 +94,7 @@ export function PortalToFollowElem({
   children,
   ...options
 }: { children: React.ReactNode } & PortalToFollowElemOptions) {
-  // This can accept any props as options, e.g. `placement`,
-  // or other positioning options.
+  // 可以接受任何属性作为选项，例如 `placement` 或其他定位选项
   const tooltip = usePortalToFollowElem(options)
   return (
     <PortalToFollowElemContext.Provider value={tooltip}>
@@ -106,13 +105,13 @@ export function PortalToFollowElem({
 
 export const PortalToFollowElemTrigger = React.forwardRef<
   HTMLElement,
-React.HTMLProps<HTMLElement> & { asChild?: boolean }
+  React.HTMLProps<HTMLElement> & { asChild?: boolean }
 >(({ children, asChild = false, ...props }, propRef) => {
   const context = usePortalToFollowElemContext()
   const childrenRef = (children as any).ref
   const ref = useMergeRefs([context.refs.setReference, propRef, childrenRef])
 
-  // `asChild` allows the user to pass any element as the anchor
+  // `asChild` 允许用户传入任何元素作为锚点
   if (asChild && React.isValidElement(children)) {
     return React.cloneElement(
       children,
@@ -129,7 +128,7 @@ React.HTMLProps<HTMLElement> & { asChild?: boolean }
     <div
       ref={ref}
       className='inline-block'
-      // The user can style the trigger based on the state
+      // 用户可以根据状态设置触发器样式
       data-state={context.open ? 'open' : 'closed'}
       {...context.getReferenceProps(props)}
     >

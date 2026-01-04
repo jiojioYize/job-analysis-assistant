@@ -32,7 +32,7 @@ const Toast = ({
   message,
   children,
 }: IToastProps) => {
-  // sometimes message is react node array. Not handle it.
+  // 有时 message 是 React 节点数组，暂不处理
   if (typeof message !== 'string') { return null }
 
   return <div className={classNames(

@@ -39,9 +39,9 @@ const Main: FC<IMainProps> = () => {
   const [isUnknownReason, setIsUnknownReason] = useState<boolean>(false)
   const [promptConfig, setPromptConfig] = useState<PromptConfig | null>(null)
   const [inited, setInited] = useState<boolean>(false)
-  // in mobile, show sidebar by click button
+  // 移动端通过点击按钮显示侧边栏
   const [isShowSidebar, { setTrue: showSidebar, setFalse: hideSidebar }] = useBoolean(false)
-  // sidebar collapsed state
+  // 侧边栏折叠状态
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false)
   const [visionConfig, setVisionConfig] = useState<VisionSettings | undefined>({
     enabled: false,
@@ -55,7 +55,7 @@ const Main: FC<IMainProps> = () => {
     if (APP_INFO?.title) { document.title = APP_INFO.title }
   }, [APP_INFO?.title])
 
-  // onData change thought (the produce obj). https://github.com/immerjs/immer/issues/576
+  // onData 改变 thought 时需要禁用自动冻结（produce 对象问题）。参考：https://github.com/immerjs/immer/issues/576
   useEffect(() => {
     setAutoFreeze(false)
     return () => {
@@ -91,7 +91,7 @@ const Main: FC<IMainProps> = () => {
     setConversationIdChangeBecauseOfNew(true)
     setCurrInputs(inputs)
     setChatStarted()
-    // parse variables in introduction
+    // 解析开场白中的变量
     setChatList(generateNewChatListWithOpenStatement('', inputs, currConversationInfo?.suggested_questions || []))
   }
   const hasSetInputs = (() => {
@@ -107,7 +107,7 @@ const Main: FC<IMainProps> = () => {
   const handleConversationSwitch = () => {
     if (!inited) { return }
 
-    // update inputs of current conversation
+    // 更新当前会话的输入参数
     let notSyncToStateIntroduction = ''
     let notSyncToStateInputs: Record<string, any> | undefined | null = {}
     let notSyncToStateSuggestedQuestions: string[] = []
@@ -130,7 +130,7 @@ const Main: FC<IMainProps> = () => {
       notSyncToStateSuggestedQuestions = newConversationInfo?.suggested_questions || []
     }
 
-    // update chat list of current conversation
+    // 更新当前会话的聊天列表
     if (!isNewConversation && !conversationIdChangeBecauseOfNew && !isResponding) {
       fetchChatList(currConversationId).then((res: any) => {
         const { data } = res
@@ -169,7 +169,7 @@ const Main: FC<IMainProps> = () => {
     else {
       setConversationIdChangeBecauseOfNew(false)
     }
-    // trigger handleConversationSwitch
+    // 触发会话切换处理
     setCurrConversationId(id, APP_ID)
     hideSidebar()
   }
@@ -182,7 +182,7 @@ const Main: FC<IMainProps> = () => {
   const shouldScrollToBottomRef = useRef(true) // 控制是否需要滚动到底部
 
   useEffect(() => {
-    // scroll to bottom with page-level scrolling
+    // 页面级滚动到底部
     if (chatListDomRef.current && shouldScrollToBottomRef.current) {
       setTimeout(() => {
         chatListDomRef.current?.scrollIntoView({
@@ -192,10 +192,10 @@ const Main: FC<IMainProps> = () => {
       }, 50)
     }
   }, [chatList, currConversationId])
-  // user can not edit inputs if user had send message
+  // 用户发送消息后不能再编辑输入参数
   const canEditInputs = !chatList.some(item => item.isAnswer === false) && isNewConversation
   const createNewChat = () => {
-    // if new chat is already exist, do not create new chat
+    // 如果新会话已存在，不重复创建
     setConversationList(prevList => {
       if (prevList.some(item => item.id === '-1')) { return prevList }
       return produce(prevList, (draft) => {
@@ -210,7 +210,7 @@ const Main: FC<IMainProps> = () => {
     })
   }
 
-  // sometime introduction is not applied to state
+  // 有时开场白未同步到状态，需要传入参数
   const generateNewChatListWithOpenStatement = (introduction?: string, inputs?: Record<string, any> | null, questions?: string[]) => {
     let calculatedIntroduction = introduction || conversationIntroduction || ''
     const calculatedPromptVariables = inputs || currInputs || null
@@ -230,7 +230,7 @@ const Main: FC<IMainProps> = () => {
     return []
   }
 
-  // init
+  // 初始化
   useEffect(() => {
     if (!hasSetAppConfig) {
       setAppUnavailable(true)
@@ -239,7 +239,7 @@ const Main: FC<IMainProps> = () => {
     (async () => {
       try {
         const [conversationData, appParams] = await Promise.all([fetchConversations(), fetchAppParams()])
-        // handle current conversation id
+        // 处理当前会话 ID
         const { data: conversations, error } = conversationData as { data: ConversationItem[], error: string }
         if (error) {
           Toast.notify({ type: 'error', message: error })
@@ -250,7 +250,7 @@ const Main: FC<IMainProps> = () => {
         const currentConversation = conversations.find(item => item.id === _conversationId)
         const isNotNewConversation = !!currentConversation
 
-        // fetch new conversation info
+        // 获取新会话信息
         const { user_input_form, opening_statement: introduction, file_upload, system_parameters, suggested_questions = [] }: any = appParams
         setLocaleOnClient(APP_INFO.default_language, true)
         setNewConversationInfo({
@@ -343,7 +343,7 @@ const Main: FC<IMainProps> = () => {
     placeholderAnswerId: string
     questionItem: ChatItem
   }) => {
-    // closesure new list is outdated.
+    // 闭包中的列表可能已过时，需要通过 getChatList() 获取最新值
     const newListWithAnswer = produce(
       getChatList().filter(item => item.id !== responseItem.id && item.id !== placeholderAnswerId),
       (draft) => {
@@ -399,7 +399,7 @@ const Main: FC<IMainProps> = () => {
       })
     }
 
-    // question
+    // 问题消息
     const questionId = `question-${Date.now()}`
     const questionItem = {
       id: questionId,
@@ -420,7 +420,7 @@ const Main: FC<IMainProps> = () => {
 
     let isAgentMode = false
 
-    // answer
+    // 回答消息
     const responseItem: ChatItem = {
       id: `${Date.now()}`,
       content: '',
@@ -444,7 +444,7 @@ const Main: FC<IMainProps> = () => {
         }
         else {
           const lastThought = responseItem.agent_thoughts?.[responseItem.agent_thoughts?.length - 1]
-          if (lastThought) { lastThought.thought = lastThought.thought + message } // need immer setAutoFreeze
+          if (lastThought) { lastThought.thought = lastThought.thought + message } // 需要 immer setAutoFreeze
         }
         if (messageId && !hasSetResponseId) {
           responseItem.id = messageId
@@ -454,7 +454,7 @@ const Main: FC<IMainProps> = () => {
         if (isFirstMessage && newConversationId) { tempNewConversationId = newConversationId }
 
         setMessageTaskId(taskId)
-        // has switched to other conversation
+        // 已切换到其他会话
         if (prevTempNewConversationId !== getCurrConversationId()) {
           setIsRespondingConCurrCon(false)
           return
@@ -508,7 +508,7 @@ const Main: FC<IMainProps> = () => {
         }
         else {
           const lastThought = response.agent_thoughts[response.agent_thoughts.length - 1]
-          // thought changed but still the same thought, so update.
+          // thought 改变但仍是同一个 thought，需要更新
           if (lastThought.id === thought.id) {
             thought.thought = lastThought.thought
             thought.message_files = lastThought.message_files
@@ -518,7 +518,7 @@ const Main: FC<IMainProps> = () => {
             responseItem.agent_thoughts!.push(thought)
           }
         }
-        // has switched to other conversation
+        // 已切换到其他会话
         if (prevTempNewConversationId !== getCurrConversationId()) {
           setIsRespondingConCurrCon(false)
           return false
@@ -551,7 +551,7 @@ const Main: FC<IMainProps> = () => {
           setChatList(newListWithAnswer)
           return
         }
-        // not support show citation
+        // 暂不支持显示引用
         // responseItem.citation = messageEnd.retriever_resources
         const newListWithAnswer = produce(
           getChatList().filter(item => item.id !== responseItem.id && item.id !== placeholderAnswerId),
@@ -575,7 +575,7 @@ const Main: FC<IMainProps> = () => {
       },
       onError() {
         setRespondingFalse()
-        // role back placeholder answer
+        // 回滚占位答案
         setChatList(produce(getChatList(), (draft) => {
           draft.splice(draft.findIndex(item => item.id === placeholderAnswerId), 1)
         }))

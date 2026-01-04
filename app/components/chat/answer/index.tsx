@@ -156,7 +156,7 @@ const FeedbackModal: FC<{
   )
 }
 
-// The component needs to maintain its own state to control whether to display input component
+// 组件需要维护自己的状态来控制是否显示输入组件
 const Answer: FC<IAnswerProps> = ({
   item,
   feedbackDisabled = false,

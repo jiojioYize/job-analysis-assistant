@@ -1,6 +1,7 @@
 {
-  "name": "webapp-conversation",
-  "version": "0.1.0",
+  "name": "job-analysis-assistant",
+  "version": "1.0.0",
+  "description": "基于Dify工作流的智能岗位分析与规划助手",
   "private": true,
   "scripts": {
     "dev": "next dev",

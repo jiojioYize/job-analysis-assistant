@@ -6,7 +6,7 @@ import Base from '../editor/base'
 import { CodeLanguage } from '@/types/app'
 import './style.css'
 
-// load file from local instead of cdn https://github.com/suren-atoyan/monaco-react/issues/482
+// 从本地加载文件而不是 CDN，参考：https://github.com/suren-atoyan/monaco-react/issues/482
 loader.config({ paths: { vs: '/vs' } })
 
 interface Props {
@@ -105,8 +105,8 @@ const CodeEditor: FC<Props> = ({
               domReadOnly: true,
               quickSuggestions: false,
               minimap: { enabled: false },
-              lineNumbersMinChars: 1, // would change line num width
-              wordWrap: 'on', // auto line wrap
+              lineNumbersMinChars: 1, // 调整行号宽度
+              wordWrap: 'on', // 自动换行
               // lineNumbers: (num) => {
               //   return <div>{num}</div>
               // }

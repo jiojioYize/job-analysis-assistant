@@ -121,7 +121,7 @@ const Chat: FC<IChatProps> = ({
   const handleKeyUp = (e: any) => {
     if (e.code === 'Enter') {
       e.preventDefault()
-      // prevent send message when using input method enter
+      // 使用输入法时按回车不发送消息
       if (!e.shiftKey && !isUseInputMethod.current) { handleSend() }
     }
   }
