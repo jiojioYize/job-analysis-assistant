@@ -68,7 +68,7 @@ export function StreamdownMarkdown({ content, className = '' }: StreamdownMarkdo
   if (unclosedCheck.hasUnclosed) {
     // 流式输出时有未闭合的 think 标签，显示正在思考
     return (
-      <div className={`markdown-body streamdown-markdown ${className}`}>
+      <div className={`markdown-body streamdown-markdown overflow-hidden break-words ${className}`}>
         {unclosedCheck.beforeContent && (
           <Streamdown>{unclosedCheck.beforeContent}</Streamdown>
         )}
@@ -81,7 +81,7 @@ export function StreamdownMarkdown({ content, className = '' }: StreamdownMarkdo
   const parts = parseContent(content)
 
   return (
-    <div className={`markdown-body streamdown-markdown ${className}`}>
+    <div className={`markdown-body streamdown-markdown overflow-hidden break-words ${className}`}>
       {parts.map((part, index) => (
         part.type === 'think'
           ? (

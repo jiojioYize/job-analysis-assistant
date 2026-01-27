@@ -81,7 +81,7 @@ const Question: FC<IQuestionProps> = ({ id, content, useCurrentUserAvatar, imgSr
 
   return (
     <div className='flex items-start justify-end w-full' key={id}>
-      <div className='group max-w-[80%]'>
+      <div className='group max-w-full'>
         <div className={`${s.question} relative text-sm text-gray-900`}>
           {isEditing ? (
             <div className='flex flex-col'>

@@ -313,9 +313,9 @@ const Answer: FC<IAnswerProps> = ({
   )
 
   return (
-    <div key={id}>
-      <div className="flex items-start justify-start w-full">
-        <div className={`${s.answerWrap} max-w-[80%]`}>
+    <div key={id} className="w-full">
+      <div className="flex items-start justify-start">
+        <div className={`${s.answerWrap} max-w-full`}>
           <div className={`${s.answer} relative text-sm text-gray-900`}>
             <div className={`py-3 px-4 bg-white rounded-tr-2xl rounded-b-2xl ${workflowProcess && 'min-w-[480px]'}`}>
               {workflowProcess && (
