@@ -5,9 +5,12 @@ import cn from '@/utils/classnames'
 interface ThinkBlockProps {
   content: string
   defaultExpanded?: boolean
+  isStreaming?: boolean
 }
 
-export function ThinkBlock({ content, defaultExpanded = false }: ThinkBlockProps) {
+const MAX_BODY_HEIGHT = 320
+
+export function ThinkBlock({ content, defaultExpanded = false, isStreaming = false }: ThinkBlockProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
   const bodyRef = useRef<HTMLDivElement | null>(null)
   const [maxHeight, setMaxHeight] = useState<number>(0)
@@ -21,7 +24,7 @@ export function ThinkBlock({ content, defaultExpanded = false }: ThinkBlockProps
     const node = bodyRef.current
 
     const updateHeight = () => {
-      setMaxHeight(node.scrollHeight)
+      setMaxHeight(Math.min(node.scrollHeight, MAX_BODY_HEIGHT))
     }
 
     updateHeight()
@@ -40,23 +43,24 @@ export function ThinkBlock({ content, defaultExpanded = false }: ThinkBlockProps
   { return null }
 
   return (
-    <div className="my-3 rounded-lg border border-gray-200 bg-gray-50 overflow-hidden">
+    <div className="my-2 overflow-hidden rounded-md border border-gray-200 bg-white">
       <button
         type="button"
+        aria-expanded={isExpanded}
         className={cn(
-          'w-full flex items-center justify-between px-4 py-2.5',
-          'text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors',
+          'w-full flex items-center justify-between px-3 py-2',
+          'text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 transition-colors',
           'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset',
         )}
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <span className="flex items-center gap-2">
-          <ThinkIcon className="w-4 h-4 text-gray-500" />
-          <span>思考过程</span>
+          <ThinkIcon className="h-3.5 w-3.5 text-gray-400" />
+          <span>{isStreaming ? '正在思考...' : '思考过程'}</span>
         </span>
         <ChevronIcon
           className={cn(
-            'w-4 h-4 text-gray-500 transition-transform duration-200',
+            'h-3.5 w-3.5 text-gray-400 transition-transform duration-200',
             isExpanded ? 'rotate-180' : '',
           )}
         />
@@ -68,8 +72,11 @@ export function ThinkBlock({ content, defaultExpanded = false }: ThinkBlockProps
         )}
         style={isExpanded ? { maxHeight } : undefined}
       >
-        <div ref={bodyRef} className="px-4 py-3 border-t border-gray-200 bg-white">
-          <div className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">
+        <div
+          ref={bodyRef}
+          className="max-h-80 overflow-y-auto border-t border-gray-200 bg-white px-3 py-2.5"
+        >
+          <div className="whitespace-pre-wrap text-xs leading-relaxed text-gray-500">
             {content}
           </div>
         </div>
