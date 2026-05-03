@@ -1,10 +1,9 @@
 'use client'
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import type { FC } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   ChatBubbleOvalLeftEllipsisIcon,
-  PencilSquareIcon,
   EllipsisHorizontalIcon,
   PencilIcon,
   TrashIcon,
@@ -21,10 +20,96 @@ function classNames(...classes: any[]) {
 const MAX_CONVERSATION_LENTH = 20
 const PINNED_CONVERSATIONS_KEY = 'pinnedConversations'
 const SIDEBAR_COLLAPSED_KEY = 'sidebarCollapsed'
+const DAY_IN_MS = 24 * 60 * 60 * 1000
+
+interface ConversationGroup {
+  key: string
+  label: string
+  items: ConversationItem[]
+}
+
+const getConversationTimestamp = (item: ConversationItem) => {
+  const rawTime = item.updated_at ?? item.created_at
+
+  if (typeof rawTime === 'number')
+  { return rawTime < 1e12 ? rawTime * 1000 : rawTime }
+
+  if (typeof rawTime === 'string') {
+    const parsedNumber = Number(rawTime)
+    if (!Number.isNaN(parsedNumber))
+    { return parsedNumber < 1e12 ? parsedNumber * 1000 : parsedNumber }
+
+    const parsedDate = Date.parse(rawTime)
+    if (!Number.isNaN(parsedDate))
+    { return parsedDate }
+  }
+
+  return 0
+}
+
+const getConversationGroup = (timestamp: number) => {
+  if (!timestamp)
+  { return { key: 'earlier', label: '更早' } }
+
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+
+  const todayStartTime = todayStart.getTime()
+  if (timestamp >= todayStartTime)
+  { return { key: 'today', label: '今天' } }
+
+  if (timestamp >= todayStartTime - DAY_IN_MS)
+  { return { key: 'yesterday', label: '昨天' } }
+
+  if (timestamp >= todayStartTime - 7 * DAY_IN_MS)
+  { return { key: 'last-7-days', label: '近 7 天' } }
+
+  if (timestamp >= todayStartTime - 30 * DAY_IN_MS)
+  { return { key: 'last-30-days', label: '近 30 天' } }
+
+  return { key: 'earlier', label: '更早' }
+}
+
+const groupConversationsByTime = (items: ConversationItem[]): ConversationGroup[] => {
+  const groupOrder = ['today', 'yesterday', 'last-7-days', 'last-30-days', 'earlier']
+  const groupMap = new Map<string, ConversationGroup>()
+
+  items
+    .map((item, index) => ({
+      item,
+      index,
+      timestamp: getConversationTimestamp(item),
+    }))
+    .sort((a, b) => {
+      if (b.timestamp !== a.timestamp)
+      { return b.timestamp - a.timestamp }
+
+      return a.index - b.index
+    })
+    .forEach(({ item, timestamp }) => {
+      const group = getConversationGroup(timestamp)
+      const existingGroup = groupMap.get(group.key)
+
+      if (existingGroup) {
+        existingGroup.items.push(item)
+      }
+      else {
+        groupMap.set(group.key, {
+          key: group.key,
+          label: group.label,
+          items: [item],
+        })
+      }
+    })
+
+  return groupOrder
+    .map(key => groupMap.get(key))
+    .filter((group): group is ConversationGroup => Boolean(group))
+}
 
 // 获取置顶列表
 const getPinnedIds = (): string[] => {
-  if (typeof window === 'undefined') return []
+  if (typeof window === 'undefined') { return [] }
   try {
     const stored = localStorage.getItem(PINNED_CONVERSATIONS_KEY)
     return stored ? JSON.parse(stored) : []
@@ -36,13 +121,13 @@ const getPinnedIds = (): string[] => {
 
 // 保存置顶列表
 const savePinnedIds = (ids: string[]) => {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined') { return }
   localStorage.setItem(PINNED_CONVERSATIONS_KEY, JSON.stringify(ids))
 }
 
 // 获取收起状态
 const getCollapsedState = (): boolean => {
-  if (typeof window === 'undefined') return false
+  if (typeof window === 'undefined') { return false }
   try {
     return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true'
   }
@@ -53,7 +138,7 @@ const getCollapsedState = (): boolean => {
 
 // 保存收起状态
 const saveCollapsedState = (collapsed: boolean) => {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined') { return }
   localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(collapsed))
 }
 
@@ -214,7 +299,7 @@ const ActionMenu: FC<{
         >
           <div
             className="bg-white rounded-lg p-5 w-80 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center mb-3">
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mr-3">
@@ -249,17 +334,17 @@ const ActionMenu: FC<{
         >
           <div
             className="bg-white rounded-lg p-4 w-80 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <h3 className="text-lg font-medium mb-3">{t('app.chat.renameTitle')}</h3>
             <input
               ref={inputRef}
               type="text"
               value={newName}
-              onChange={(e) => setNewName(e.target.value)}
+              onChange={e => setNewName(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleRenameSubmit()
-                if (e.key === 'Escape') setShowRenameModal(false)
+                if (e.key === 'Enter') { handleRenameSubmit() }
+                if (e.key === 'Escape') { setShowRenameModal(false) }
               }}
               placeholder={t('app.chat.renamePlaceholder') as string}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 mb-4"
@@ -334,18 +419,69 @@ const Sidebar: FC<ISidebarProps> = ({
     savePinnedIds(newPinnedIds)
   }
 
-  // 排序列表：置顶的在前面
-  const sortedList = [...list].sort((a, b) => {
-    const aIsPinned = pinnedIds.includes(a.id)
-    const bIsPinned = pinnedIds.includes(b.id)
-    if (aIsPinned && !bIsPinned) return -1
-    if (!aIsPinned && bIsPinned) return 1
-    // 如果都置顶，按置顶顺序排序
-    if (aIsPinned && bIsPinned) {
-      return pinnedIds.indexOf(a.id) - pinnedIds.indexOf(b.id)
-    }
-    return 0
-  })
+  const conversationGroups = useMemo(() => {
+    const temporaryItems = list.filter(item => item.id === '-1')
+    const pinnedItems = pinnedIds
+      .map(id => list.find(item => item.id === id))
+      .filter((item): item is ConversationItem => Boolean(item))
+      .filter(item => item.id !== '-1')
+    const unpinnedItems = list.filter(item => item.id !== '-1' && !pinnedIds.includes(item.id))
+    const timeGroups = groupConversationsByTime(unpinnedItems)
+    const temporaryGroups = temporaryItems.length > 0
+      ? [{ key: 'current', label: '当前会话', items: temporaryItems }]
+      : []
+
+    return pinnedItems.length > 0
+      ? [...temporaryGroups, { key: 'pinned', label: '置顶', items: pinnedItems }, ...timeGroups]
+      : [...temporaryGroups, ...timeGroups]
+  }, [list, pinnedIds])
+
+  const renderConversationItem = (item: ConversationItem) => {
+    const isCurrent = item.id === currentId
+    const isPinned = pinnedIds.includes(item.id)
+    const ItemIcon
+      = isCurrent ? ChatBubbleOvalLeftEllipsisSolidIcon : ChatBubbleOvalLeftEllipsisIcon
+
+    return (
+      <div
+        onClick={() => onCurrentIdChange(item.id)}
+        key={item.id}
+        className={classNames(
+          isCurrent
+            ? 'bg-primary-50 text-primary-600'
+            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-700',
+          'group flex items-center justify-between rounded-md px-2 py-2 text-sm font-medium cursor-pointer',
+        )}
+      >
+        <div className="flex items-center flex-1 min-w-0">
+          <ItemIcon
+            className={classNames(
+              isCurrent
+                ? 'text-primary-600'
+                : 'text-gray-400 group-hover:text-gray-500',
+              'mr-3 h-5 w-5 flex-shrink-0',
+            )}
+            aria-hidden="true"
+          />
+          <span className="truncate">{item.name}</span>
+          {isPinned && (
+            <PinIcon className="ml-1 h-3 w-3 text-gray-400 flex-shrink-0" />
+          )}
+        </div>
+        {/* 新对话(id='-1')没有历史记录，不显示菜单 */}
+        {item.id !== '-1' && (
+          <ActionMenu
+            conversationId={item.id}
+            conversationName={item.name}
+            isPinned={isPinned}
+            onRename={onRename}
+            onDelete={onDelete}
+            onTogglePin={handleTogglePin}
+          />
+        )}
+      </div>
+    )
+  }
 
   // 收起状态的侧边栏
   if (isCollapsed) {
@@ -404,52 +540,17 @@ const Sidebar: FC<ISidebarProps> = ({
         </div>
       )}
 
-      <nav className="mt-4 flex-1 space-y-1 bg-white p-4 !pt-0 overflow-y-auto overflow-x-hidden">
-        {sortedList.map((item) => {
-          const isCurrent = item.id === currentId
-          const isPinned = pinnedIds.includes(item.id)
-          const ItemIcon
-            = isCurrent ? ChatBubbleOvalLeftEllipsisSolidIcon : ChatBubbleOvalLeftEllipsisIcon
-          return (
-            <div
-              onClick={() => onCurrentIdChange(item.id)}
-              key={item.id}
-              className={classNames(
-                isCurrent
-                  ? 'bg-primary-50 text-primary-600'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-700',
-                'group flex items-center justify-between rounded-md px-2 py-2 text-sm font-medium cursor-pointer',
-              )}
-            >
-              <div className="flex items-center flex-1 min-w-0">
-                <ItemIcon
-                  className={classNames(
-                    isCurrent
-                      ? 'text-primary-600'
-                      : 'text-gray-400 group-hover:text-gray-500',
-                    'mr-3 h-5 w-5 flex-shrink-0',
-                  )}
-                  aria-hidden="true"
-                />
-                <span className="truncate">{item.name}</span>
-                {isPinned && (
-                  <PinIcon className="ml-1 h-3 w-3 text-gray-400 flex-shrink-0" />
-                )}
-              </div>
-              {/* 新对话(id='-1')没有历史记录，不显示菜单 */}
-              {item.id !== '-1' && (
-                <ActionMenu
-                  conversationId={item.id}
-                  conversationName={item.name}
-                  isPinned={isPinned}
-                  onRename={onRename}
-                  onDelete={onDelete}
-                  onTogglePin={handleTogglePin}
-                />
-              )}
+      <nav className="mt-4 flex-1 bg-white p-4 !pt-0 overflow-y-auto overflow-x-hidden">
+        {conversationGroups.map(group => (
+          <div key={group.key} className="mb-4 last:mb-0">
+            <div className="mb-1 px-2 text-xs font-medium text-gray-400">
+              {group.label}
             </div>
-          )
-        })}
+            <div className="space-y-1">
+              {group.items.map(renderConversationItem)}
+            </div>
+          </div>
+        ))}
       </nav>
       <div className="flex flex-shrink-0 pr-4 pb-4 pl-4">
         <div className="text-gray-400 font-normal text-xs">© {copyRight} {(new Date()).getFullYear()}</div>

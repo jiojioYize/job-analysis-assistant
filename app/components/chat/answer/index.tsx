@@ -6,7 +6,7 @@ import type { Emoji } from '@/types/tools'
 import { HandThumbDownIcon, HandThumbUpIcon } from '@heroicons/react/24/outline'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import StreamdownMarkdown from '@/app/components/base/streamdown-markdown'
+import StreamdownMarkdown, { cleanReportMarkdown } from '@/app/components/base/streamdown-markdown'
 import Toast from '@/app/components/base/toast'
 import Tooltip from '@/app/components/base/tooltip'
 import WorkflowProcess from '@/app/components/workflow/workflow-process'
@@ -45,6 +45,20 @@ const CopyIcon: FC<{ className?: string }> = ({ className }) => (
   </svg>
 )
 
+const PreviewIcon: FC<{ className?: string }> = ({ className }) => (
+  <svg className={className} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M1.33334 8C1.33334 8 3.33334 4 8.00001 4C12.6667 4 14.6667 8 14.6667 8C14.6667 8 12.6667 12 8.00001 12C3.33334 12 1.33334 8 1.33334 8Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M8 9.5C8.82843 9.5 9.5 8.82843 9.5 8C9.5 7.17157 8.82843 6.5 8 6.5C7.17157 6.5 6.5 7.17157 6.5 8C6.5 8.82843 7.17157 9.5 8 9.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
+const DownloadIcon: FC<{ className?: string }> = ({ className }) => (
+  <svg className={className} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 2V10M8 10L4.66667 6.66667M8 10L11.3333 6.66667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M2.66667 12.6667H13.3333" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+)
+
 // 重新生成图标
 const RegenerateIcon: FC<{ className?: string }> = ({ className }) => (
   <svg className={className} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -77,6 +91,48 @@ const IconWrapper: FC<{ children: React.ReactNode | string }> = ({ children }) =
   )
 }
 
+const stripThinkTags = (text: string) => {
+  return text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim()
+}
+
+const getReportContent = (text: string) => {
+  return cleanReportMarkdown(stripThinkTags(text))
+}
+
+const isReportContent = (text: string) => {
+  return /岗位要求分析报告/.test(text)
+}
+
+const getReportTitle = (text: string) => {
+  const cleanedContent = getReportContent(text)
+  const headingMatch = cleanedContent.match(/^#\s*(?:📄\s*)?(.+)$/m)
+  const inlineTitleMatch = cleanedContent.match(/岗位要求分析报告[:：]\s*([^\n]+)/)
+  const title = headingMatch?.[1] || (inlineTitleMatch ? `岗位要求分析报告：${inlineTitleMatch[1]}` : '岗位要求分析报告')
+
+  return title
+    .replace(/[*_`#]/g, '')
+    .trim()
+}
+
+const toSafeFileName = (title: string) => {
+  return title
+    .replace(/[\\/:*?"<>|]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim() || '岗位要求分析报告'
+}
+
+const downloadMarkdown = (content: string, title: string) => {
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${toSafeFileName(title)}.md`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
 interface IAnswerProps {
   item: ChatItem
   feedbackDisabled: boolean
@@ -96,7 +152,7 @@ const FeedbackModal: FC<{
   const { t } = useTranslation()
   const [feedbackContent, setFeedbackContent] = useState('')
 
-  if (!isOpen) return null
+  if (!isOpen) { return null }
 
   const handleSubmit = () => {
     onSubmit(feedbackContent)
@@ -131,7 +187,7 @@ const FeedbackModal: FC<{
           </label>
           <textarea
             value={feedbackContent}
-            onChange={(e) => setFeedbackContent(e.target.value)}
+            onChange={e => setFeedbackContent(e.target.value)}
             placeholder={t('common.feedback.placeholder') as string}
             className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700"
           />
@@ -156,6 +212,45 @@ const FeedbackModal: FC<{
   )
 }
 
+const ReportPreviewModal: FC<{
+  content: string
+  title: string
+  onClose: () => void
+  onExport: () => void
+}> = ({ content, title, onClose, onExport }) => {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
+      <div className="flex h-[85vh] w-full max-w-[1080px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div className="flex items-center justify-between gap-4 border-b border-gray-200 px-5 py-4">
+          <div className="min-w-0">
+            <div className="truncate text-base font-semibold text-gray-900">{title}</div>
+            <div className="mt-0.5 text-xs text-gray-500">报告预览</div>
+          </div>
+          <div className="flex flex-shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={onExport}
+              className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              导出 Markdown
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+            >
+              关闭
+            </button>
+          </div>
+        </div>
+        <div className="flex-1 overflow-auto px-6 py-5">
+          <StreamdownMarkdown content={content} className="mx-auto max-w-[960px]" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // 组件需要维护自己的状态来控制是否显示输入组件
 const Answer: FC<IAnswerProps> = ({
   item,
@@ -173,6 +268,10 @@ const Answer: FC<IAnswerProps> = ({
 
   // 反馈对话框状态
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
+  const [showReportPreview, setShowReportPreview] = useState(false)
+  const reportContent = getReportContent(content)
+  const reportTitle = getReportTitle(content)
+  const shouldShowReportActions = !isAgentMode && isReportContent(content)
 
   // 复制回答内容
   const handleCopy = async () => {
@@ -192,6 +291,10 @@ const Answer: FC<IAnswerProps> = ({
   // 重新生成
   const handleRegenerate = () => {
     onRegenerate?.(id)
+  }
+
+  const handleExportReport = () => {
+    downloadMarkdown(reportContent, reportTitle)
   }
 
   // 处理不喜欢按钮点击 - 打开反馈对话框
@@ -262,6 +365,16 @@ const Answer: FC<IAnswerProps> = ({
     const actionButtons = () => {
       return (
         <div className="flex gap-1">
+          {shouldShowReportActions && (
+            <>
+              <Tooltip selector={`preview-report-${randomString(16)}`} content="预览报告">
+                {OperationBtn({ innerContent: <IconWrapper><PreviewIcon className="w-4 h-4" /></IconWrapper>, onClick: () => setShowReportPreview(true) })}
+              </Tooltip>
+              <Tooltip selector={`export-report-${randomString(16)}`} content="导出 Markdown">
+                {OperationBtn({ innerContent: <IconWrapper><DownloadIcon className="w-4 h-4" /></IconWrapper>, onClick: handleExportReport })}
+              </Tooltip>
+            </>
+          )}
           <Tooltip selector={`copy-answer-${randomString(16)}`} content={t('common.operation.copy') as string}>
             {OperationBtn({ innerContent: <IconWrapper><CopyIcon className="w-4 h-4" /></IconWrapper>, onClick: handleCopy })}
           </Tooltip>
@@ -363,6 +476,14 @@ const Answer: FC<IAnswerProps> = ({
         onClose={() => setShowFeedbackModal(false)}
         onSubmit={handleSubmitFeedback}
       />
+      {showReportPreview && (
+        <ReportPreviewModal
+          content={reportContent}
+          title={reportTitle}
+          onClose={() => setShowReportPreview(false)}
+          onExport={handleExportReport}
+        />
+      )}
     </div>
   )
 }

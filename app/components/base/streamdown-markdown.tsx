@@ -104,7 +104,7 @@ function isEmptyDifficultItemsBody(body: string) {
   return /^(?:无|暂无|没有|无疑难项|暂无疑难项|没有疑难项)?$/.test(normalized)
 }
 
-function cleanReportMarkdown(content: string) {
+export function cleanReportMarkdown(content: string) {
   let result = content
 
   const labelSection = getReportSection(result, '标注含义说明')

@@ -104,6 +104,8 @@ export interface ConversationItem {
   inputs: Record<string, any> | null
   introduction: string
   suggested_questions?: string[]
+  created_at?: number | string
+  updated_at?: number | string
 }
 
 export interface AppInfo {
