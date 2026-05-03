@@ -325,6 +325,37 @@
   line-height: 1.25;
 }
 
+.markdown-body.streamdown-markdown h1 {
+  font-size: 22px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.markdown-body.streamdown-markdown h2 {
+  font-size: 18px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.markdown-body.streamdown-markdown h3 {
+  font-size: 16px;
+  line-height: 1.45;
+  font-weight: 700;
+}
+
+.markdown-body.streamdown-markdown h4 {
+  font-size: 15px;
+  line-height: 1.45;
+  font-weight: 650;
+}
+
+.markdown-body.streamdown-markdown h5,
+.markdown-body.streamdown-markdown h6 {
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 650;
+}
+
 
 .markdown-body p {
   margin-top: 0;
